@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'constants/theme.dart';
+
+import 'package:lottie/lottie.dart';
 
 void main() {
   runApp(const DrinKUpApp());
@@ -178,94 +181,118 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentCl = _currentWaterIntake;
     final goalCl = _dailyGoal;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Focus(
-          autofocus: true,
-          focusNode: _focusNode,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-
-                  // Progress circle - responsive size
-                  SizedBox(
-                    width: MediaQuery.of(context).size.shortestSide * 0.9, // 90% of the shortest side
-                    height: MediaQuery.of(context).size.shortestSide * 0.9,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Background circle
-                        CircularProgressIndicator(
-                          value: 1.0,
-                          strokeWidth: 10,
-                          backgroundColor: Colors.grey[800],
-                        ),
-                        // Progress circle with rotation gesture
-                        GestureDetector(
-                          onVerticalDragUpdate: (details) {
-                            // Convert vertical drag to volume change (1px = 0.01L or 10ml)
-                            final delta = -details.delta.dy * 0.01;
-                            _updateWaterIntake(_currentWaterIntake + delta);
-                          },
-                          onVerticalDragEnd: (_) {
-                            // Save the updated value when user stops dragging
-                            _saveWaterIntake();
-                          },
-                          child: CircularProgressIndicator(
-                            value: progress,
-                            strokeWidth: 10,
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                          ),
-                        ),
-                        
-                        // Center text
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '${goalCl.toInt()}cl',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  color: Colors.white,
-                                ),
+    return Stack(
+      children: [
+        // Lottie background
+        Positioned.fill(
+          child: Lottie.asset(
+            'assets/water_animation.json',
+            fit: BoxFit.cover,
+            repeat: true,
+            animate: true,
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('Error loading Lottie animation: $error');
+              return Container(color: Colors.black);
+            },
+          ),
+        ),
+        // Main content
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: Focus(
+              autofocus: true,
+              focusNode: _focusNode,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+                      // Progress circle - responsive size
+                      SizedBox(
+                        width: MediaQuery.of(context).size.shortestSide * 0.9, // 90% of the shortest side
+                        height: MediaQuery.of(context).size.shortestSide * 0.9,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Background circle
+                            CircularProgressIndicator(
+                              value: 1.0,
+                              strokeWidth: 10,
+                              backgroundColor: Colors.grey[800],
+                            ),
+                            // Progress circle with rotation gesture
+                            GestureDetector(
+                              onVerticalDragUpdate: (details) {
+                                // Convert vertical drag to volume change (1px = 0.01L or 10ml)
+                                final delta = -details.delta.dy * 0.01;
+                                _updateWaterIntake(_currentWaterIntake + delta);
+                              },
+                              onVerticalDragEnd: (_) {
+                                // Save the updated value when user stops dragging
+                                _saveWaterIntake();
+                              },
+                              child: CircularProgressIndicator(
+                                value: progress,
+                                strokeWidth: 10,
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                               ),
- 
-                              // Add "check" icon button validate user declaration
-                            IconButton(
-                                  onPressed: _resetDailyProgress,
-                                  icon: const Icon(Icons.check, color: Colors.white),
-                                  color: Colors.white,
-                                  iconSize: 20,
-                                ),
-                              const SizedBox(height: 5),
-                             Text(
-                                '${currentCl.toInt()}cl',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
+                            ),
+                            
+                            // Center text
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${goalCl.toInt()}cl',
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  // Add "check" icon button validate user declaration
+                                  IconButton(
+                                    onPressed: _resetDailyProgress,
+                                    icon: const Icon(Icons.check, color: Colors.white),
+                                    color: Colors.white,
+                                    iconSize: 20,
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    '${currentCl.toInt()}cl',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Water amount buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildWaterButton(5, '5cl'),
+                          _buildWaterButton(10, '10cl'),
+                          _buildWaterButton(25, '25cl'),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 0),
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
-
 }

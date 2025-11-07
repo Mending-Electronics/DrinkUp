@@ -62,7 +62,9 @@ flutter_icons:
 flutter:
   # Add the assets directory
   assets:
-    - assets/
+    - assets/ 
+    - assets/water_animation.json
+
   
   # Enable Material Icons and basic theming
   uses-material-design: true
