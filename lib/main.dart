@@ -163,19 +163,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Stack(
       children: [
-        // Lottie background
+        // Lottie background with scaling
         Positioned.fill(
-          child: Lottie.asset(
-            'assets/water_animation.json',
-            fit: BoxFit.cover,  // This will cover the available space while maintaining aspect ratio
-            width: double.infinity,  // Take full available width
-            height: double.infinity, // Take full available height
-            repeat: true,
-            animate: true,
-            errorBuilder: (context, error, stackTrace) {
-              debugPrint('Error loading Lottie animation: $error');
-              return Container(color: AppColors.dark);  // Using your theme color
-            },
+          child: Transform.scale(
+            scale: 1.1, // Scale up by 20%
+            child: Lottie.asset(
+              'assets/water_animation.json',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              repeat: true,
+              animate: true,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('Error loading Lottie animation: $error');
+                return Container(color: AppColors.dark);
+              },
+            ),
           ),
         ),
         // Main content
@@ -187,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
               focusNode: _focusNode,
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -217,8 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _saveWaterIntake();
                               },
                               child: CircularProgressIndicator(
-                                value: progress,
-                                strokeWidth: 10,
+                                value: progress * 10,
+                                strokeWidth: 8,
                                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue1),
                               ),
                             ),
