@@ -36,13 +36,12 @@ dependencies:
   shared_preferences: ^2.2.2
   vector_math: ^2.1.4
   flutter_compass: ^0.8.1
-  wear: ^1.1.0
-
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

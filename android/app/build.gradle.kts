@@ -5,17 +5,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Add this configuration for the wear plugin
-subprojects {
-    afterEvaluate {
-        if (project.name == "wear") {
-            configure<com.android.build.gradle.LibraryExtension> {
-                namespace = "dev.flutter.plugins.wear"
-            }
-        }
-    }
-}
-
 android {
     namespace = "com.example.drinkup"
     compileSdk = flutter.compileSdkVersion
@@ -51,32 +40,7 @@ android {
 }
 
 
-// Configure the wearApp build type
-android {
-    buildTypes {
-        getByName("debug") {
-            // Ensure the wear module has the correct namespace
-            project.afterEvaluate {
-                project(":wear").afterEvaluate {
-                    extensions.findByType<com.android.build.gradle.LibraryExtension>()?.apply {
-                        namespace = "dev.flutter.plugins.wear"
-                        compileSdk = 33
-                        defaultConfig {
-                            minSdk = 23
-                            targetSdk = 33
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-dependencies {
-    implementation("androidx.wear:wear:1.3.0")
-    implementation("com.google.android.support:wearable:2.9.0")
-    compileOnly("com.google.android.wearable:wearable:2.9.0")
-}
+dependencies {}
 
 flutter {
     source = "../.."
