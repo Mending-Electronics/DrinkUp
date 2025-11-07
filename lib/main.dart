@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,8 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double _currentWaterIntake = 0.0;
   double _dailyGoal = 1.0;
   late SharedPreferences _prefs;
-  bool _isAmbient = false;
   late Timer _goalIncreaseTimer;
+  DateTime? _lastIncreaseTime;
   final FocusNode _focusNode = FocusNode();
   final double _volumeStep = 0.1; // 100ml per scroll step
 
@@ -66,10 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
     _focusNode.requestFocus();
     RawKeyboard.instance.addListener(_handleKeyEvent);
     
-    // Start timer to increase daily goal every 30 seconds
+    _startGoalIncreaseTimer();
+  }
+
+  void _startGoalIncreaseTimer() {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      final now = DateTime.now();
       setState(() {
-        _dailyGoal += 0.1; // Increase by 100ml (0.1L)
+        _dailyGoal = (_dailyGoal + 0.1).clamp(0.1, 10.0); // Increase by 100ml (0.1L)
+        _lastIncreaseTime = now;
         _prefs.setDouble('daily_goal', _dailyGoal);
       });
     });
@@ -136,12 +142,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _resetDailyProgress() {
+    // Cancel the current timer to prevent race conditions
+    _goalIncreaseTimer.cancel();
+    
     setState(() {
+      // Calculate the time passed since last increase
+      final now = DateTime.now();
+      final lastIncreaseTime = _lastIncreaseTime ?? now;
+      final timePassed = now.difference(lastIncreaseTime);
+      
+      // Calculate how many 30-second intervals have passed
+      final intervalsPassed = timePassed.inSeconds ~/ 30;
+      
+      // Calculate the total automatic increase that should have happened
+      final autoIncrease = intervalsPassed * 0.1; // 100ml per interval
+      
+      // Adjust the daily goal: subtract the submitted amount and add any automatic increases
+      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(0.1, 10.0);
+      
       _currentWaterIntake = 0.0;
-      _dailyGoal = 0.1;
+      _lastIncreaseTime = now; // Reset the last increase time
+      
       _prefs.setDouble('water_intake', _currentWaterIntake);
       _prefs.setDouble('daily_goal', _dailyGoal);
     });
+    
+    // Restart the timer
+    _startGoalIncreaseTimer();
   }
 
   @override
