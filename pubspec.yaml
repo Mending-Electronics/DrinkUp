@@ -41,6 +41,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  image_path: "assets/icon/favicon.png"
+  android_launcher_icon: "@mipmap/ic_launcher"
+  android_launcher_icon_adaptive_background: "#000000"
+  
+  # For Wear OS
+  android_launcher_icon_wear:
+    "mipmap/ic_launcher": "assets/icon/favicon.png"
+    "mipmap/ic_launcher_round": "assets/icon/favicon.png"
 
 
 # For information on the generic Dart part of this file, see the
