@@ -1,0 +1,10 @@
+// This script will be applied to the wear module only
+android {
+    namespace 'dev.flutter.plugins.wear'
+    compileSdk 33
+    
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 33
+    }
+}

@@ -1,0 +1,30 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 1234567..89abcde 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -2,6 +2,7 @@ buildscript {
+     ext.kotlin_version = '1.8.0'
+     ext.coroutines_version = '1.6.4'
+     ext.work_version = '2.8.0'
++    ext.namespace = 'dev.flutter.plugins.wear'
+     
+     repositories {
+         google()
+@@ -20,6 +21,9 @@ android {
+     }
+ 
+     defaultConfig {
++        namespace "dev.flutter.plugins.wear"
++        minSdkVersion 23
++        targetSdkVersion 33
+         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+     }
+ 
+@@ -29,6 +33,7 @@ android {
+     }
+ 
+     buildTypes {
++        release {}
+         profile {
+             initWith debug
+         }
