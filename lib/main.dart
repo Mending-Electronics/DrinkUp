@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final intervalsPassed = timePassed.inSeconds ~/ 30;
       
       // Calculate the total automatic increase that should have happened (1cl per interval)
-      final autoIncrease = intervalsPassed * 1.0; // 1cl per interval
+      final autoIncrease = intervalsPassed * 10.0; // 10cl per interval
       
       // Adjust the daily goal: subtract the submitted amount and add any automatic increases
       _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
@@ -166,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // Lottie background with scaling
         Positioned.fill(
           child: Transform.scale(
-            scale: 1.1, // Scale up by 20%
+            scale: 1.15, // Scale up by 20%
             child: Lottie.asset(
               'assets/water_animation.json',
               fit: BoxFit.cover,
@@ -190,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
               focusNode: _focusNode,
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(11.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _saveWaterIntake();
                               },
                               child: CircularProgressIndicator(
-                                value: progress * 10,
+                                value: progress,
                                 strokeWidth: 8,
                                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue1),
                               ),
