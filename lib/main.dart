@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _goalIncreaseTimer;
   DateTime? _lastIncreaseTime;
   final FocusNode _focusNode = FocusNode();
-  final double _volumeStep = 10.0; // 1cl per scroll step
+  final double _volumeStep = 5.0; // 5cl per scroll step
 
   @override
   void initState() {
@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final intervalsPassed = timePassed.inSeconds ~/ 30;
       
       // Calculate the total automatic increase that should have happened (1cl per interval)
-      final autoIncrease = intervalsPassed * 10.0; // 10cl per interval
+      final autoIncrease = intervalsPassed * 10.0; // 1cl per interval
       
       // Adjust the daily goal: subtract the submitted amount and add any automatic increases
       _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
@@ -194,7 +194,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // const SizedBox(height: 20),
                       // Progress circle - responsive size
                       SizedBox(
                         width: MediaQuery.of(context).size.shortestSide * 0.9, // 90% of the shortest side
@@ -202,18 +201,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            // Background circle
-                            // CircularProgressIndicator(
-                            //   value: 1.0,
-                            //   strokeWidth: 10,
-                            //   // backgroundColor: Colors.grey[800],
-                            // ),
-                            // Progress circle with rotation gesture
                             GestureDetector(
                               onVerticalDragUpdate: (details) {
-                                // Convert vertical drag to volume change (1px = 0.01L or 10ml)
-                                final delta = -details.delta.dy * 0.01;
-                                _updateWaterIntake(_currentWaterIntake + delta);
+                                // Convert vertical drag to volume change (1px = 0.1L or 10cl)
+                                final step = details.delta.dy > 0 ? -_volumeStep : _volumeStep;
+                                _updateWaterIntake(_currentWaterIntake + step);
                               },
                               onVerticalDragEnd: (_) {
                                 // Save the updated value when user stops dragging
@@ -222,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: CircularProgressIndicator(
                                 value: progress,
                                 strokeWidth: 8,
-                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue1),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue2),
                               ),
                             ),
                             
@@ -233,9 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   Text(
                                     '${goalCl.toInt()}cl',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 28,
-                                      color: AppColors.white,
+                                      color: goalCl.toInt() > 30 
+                                          ? AppColors.danger 
+                                          : goalCl.toInt() > 20 
+                                              ? AppColors.warning 
+                                              : goalCl.toInt() < 1 
+                                                  ? AppColors.success 
+                                                  : AppColors.white,
                                     ),
                                   ),
                                   // Add "check" icon button validate user declaration
