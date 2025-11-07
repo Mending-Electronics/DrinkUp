@@ -89,8 +89,12 @@ class _HomeScreenState extends State<HomeScreen> {
     
     setState(() {
       _currentWaterIntake = double.parse(newValue.toStringAsFixed(1));
-      _prefs.setDouble('water_intake', _currentWaterIntake);
     });
+    _saveWaterIntake();
+  }
+
+  Future<void> _saveWaterIntake() async {
+    await _prefs.setDouble('water_intake', _currentWaterIntake);
   }
 
   Future<void> _initPrefs() async {
@@ -132,9 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final progress = _dailyGoal > 0 ? (_currentWaterIntake / _dailyGoal).clamp(0.0, 1.0) : 0.0;
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 400;
-    final circleSize = isSmallScreen ? screenSize.width * 0.7 : 200.0;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -150,10 +151,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Progress circle
+                  // Progress circle - responsive size
                   SizedBox(
-                    width: circleSize,
-                    height: circleSize,
+                    width: MediaQuery.of(context).size.shortestSide * 0.9, // 90% of the shortest side
+                    height: MediaQuery.of(context).size.shortestSide * 0.9,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -166,9 +167,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Progress circle with rotation gesture
                         GestureDetector(
                           onVerticalDragUpdate: (details) {
-                            // Convert vertical drag to volume change
-                            final delta = -details.delta.dy / 100; // Scale down the sensitivity
+                            // Convert vertical drag to volume change (1px = 0.01L or 10ml)
+                            final delta = -details.delta.dy * 0.01;
                             _updateWaterIntake(_currentWaterIntake + delta);
+                          },
+                          onVerticalDragEnd: (_) {
+                            // Save the updated value when user stops dragging
+                            _saveWaterIntake();
                           },
                           child: CircularProgressIndicator(
                             value: progress,
@@ -176,13 +181,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                           ),
                         ),
-                        // Add "check" icon button here to 
-                        IconButton(
-                          onPressed: _resetDailyProgress,
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          color: Colors.white,
-                          iconSize: 15,
-                          padding: EdgeInsets.all(5),
+                        // Add "check" icon button validate user declaration
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: IconButton(
+                            onPressed: _resetDailyProgress,
+                            icon: const Icon(Icons.check, color: Colors.white),
+                            color: Colors.white,
+                            iconSize: 15,
+                            padding: EdgeInsets.zero,
+                          ),
                         ),
                         
                         // Center text
