@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       final now = DateTime.now();
       setState(() {
-        _dailyGoal = (_dailyGoal + 1.0).clamp(1.0, 100.0); // Increase by 1cl (0.01L)
+        _dailyGoal = (_dailyGoal + 1.0).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
         _lastIncreaseTime = now;
         _prefs.setDouble('daily_goal', _dailyGoal);
       });
@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final autoIncrease = intervalsPassed * 1.0; // 1cl per interval
       
       // Adjust the daily goal: subtract the submitted amount and add any automatic increases
-      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(1.0, 100.0);
+      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
       
       _currentWaterIntake = 0.0;
       _lastIncreaseTime = now; // Reset the last increase time
