@@ -168,6 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Lottie.asset(
             'assets/water_animation.json',
             fit: BoxFit.cover,
+            // width: MediaQuery.of(context).size.shortestSide * 2, // 90% of the shortest side
+            // height: MediaQuery.of(context).size.shortestSide * 2,
             repeat: true,
             animate: true,
             errorBuilder: (context, error, stackTrace) {
@@ -189,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20),
+                      // const SizedBox(height: 20),
                       // Progress circle - responsive size
                       SizedBox(
                         width: MediaQuery.of(context).size.shortestSide * 0.9, // 90% of the shortest side
@@ -217,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: CircularProgressIndicator(
                                 value: progress,
                                 strokeWidth: 10,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue1),
                               ),
                             ),
                             
@@ -230,24 +232,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                     '${goalCl.toInt()}cl',
                                     style: const TextStyle(
                                       fontSize: 28,
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                     ),
                                   ),
                                   // Add "check" icon button validate user declaration
                                   IconButton(
                                     onPressed: _resetDailyProgress,
-                                    icon: const Icon(Icons.check, color: Colors.white),
-                                    color: Colors.white,
+                                    icon: const Icon(Icons.check, color: AppColors.white),
+                                    color: AppColors.white,
                                     iconSize: 20,
                                   ),
-                                  const SizedBox(height: 5),
+                                  // const SizedBox(height: 5),
                                   Text(
                                     '${currentCl.toInt()}cl',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
+                                      color: AppColors.white,
+                                    ),  
                                   ),
                                 ],
                               ),

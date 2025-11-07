@@ -9,24 +9,22 @@ class AppColors {
 }
 
 final ThemeData drinkUpTheme = ThemeData(
-  brightness: Brightness.light,
-  scaffoldBackgroundColor: AppColors.white,
+  brightness: Brightness.dark,
+  scaffoldBackgroundColor: AppColors.dark,
   colorScheme: ColorScheme(
-    brightness: Brightness.light,
+    brightness: Brightness.dark,
     primary: AppColors.blue2,
     onPrimary: AppColors.white,
     secondary: AppColors.blue3,
     onSecondary: AppColors.dark,
-    background: AppColors.white,
-    onBackground: AppColors.dark,
-    surface: AppColors.blue1,
+    surface: AppColors.dark,
     onSurface: AppColors.white,
     error: Colors.red,
     onError: AppColors.white,
   ),
   textTheme: const TextTheme(
-    headlineMedium: TextStyle(color: AppColors.dark),
-    bodyMedium: TextStyle(color: AppColors.dark),
+    headlineMedium: TextStyle(color: AppColors.white),
+    bodyMedium: TextStyle(color: AppColors.white),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.blue2,
