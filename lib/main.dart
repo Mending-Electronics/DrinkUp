@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _goalIncreaseTimer;
   DateTime? _lastIncreaseTime;
   final FocusNode _focusNode = FocusNode();
-  final double _volumeStep = 0.1; // 100ml per scroll step
+  final double _volumeStep = 1.0; // 1cl per scroll step
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       final now = DateTime.now();
       setState(() {
-        _dailyGoal = (_dailyGoal + 0.1).clamp(0.1, 10.0); // Increase by 100ml (0.1L)
+        _dailyGoal = (_dailyGoal + 1.0).clamp(1.0, 100.0); // Increase by 1cl (0.01L)
         _lastIncreaseTime = now;
         _prefs.setDouble('daily_goal', _dailyGoal);
       });
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateWaterIntake(double newValue) {
     if (newValue < 0) newValue = 0;
-    if (newValue > 10) newValue = 10; // 10L max
+    if (newValue > 100) newValue = 100; // 100cl (1L) max
     
     setState(() {
       _currentWaterIntake = double.parse(newValue.toStringAsFixed(1));
@@ -154,11 +154,11 @@ class _HomeScreenState extends State<HomeScreen> {
       // Calculate how many 30-second intervals have passed
       final intervalsPassed = timePassed.inSeconds ~/ 30;
       
-      // Calculate the total automatic increase that should have happened
-      final autoIncrease = intervalsPassed * 0.1; // 100ml per interval
+      // Calculate the total automatic increase that should have happened (1cl per interval)
+      final autoIncrease = intervalsPassed * 1.0; // 1cl per interval
       
       // Adjust the daily goal: subtract the submitted amount and add any automatic increases
-      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(0.1, 10.0);
+      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(1.0, 100.0);
       
       _currentWaterIntake = 0.0;
       _lastIncreaseTime = now; // Reset the last increase time
@@ -174,6 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final progress = _dailyGoal > 0 ? (_currentWaterIntake / _dailyGoal).clamp(0.0, 1.0) : 0.0;
+    // Convert to cl for display (1cl = 10ml, but we'll store in cl directly)
+    final currentCl = _currentWaterIntake;
+    final goalCl = _dailyGoal;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -226,13 +229,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                '${(_currentWaterIntake * 1000).toInt()}ml',
-                                style: const TextStyle(
+                                '${goalCl.toInt()}cl',
+                                style: TextStyle(
                                   fontSize: 28,
-                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
+ 
                               // Add "check" icon button validate user declaration
                             IconButton(
                                   onPressed: _resetDailyProgress,
@@ -241,11 +244,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   iconSize: 20,
                                 ),
                               const SizedBox(height: 5),
-                              Text(
-                                'of ${(_dailyGoal * 1000).toInt()}ml',
-                                style: TextStyle(
+                             Text(
+                                '${currentCl.toInt()}cl',
+                                style: const TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey[400],
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
                                 ),
                               ),
                             ],
