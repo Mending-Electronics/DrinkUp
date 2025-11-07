@@ -90,106 +90,130 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final progress = _dailyGoal > 0 ? (_currentWaterIntake / _dailyGoal).clamp(0.0, 1.0) : 0.0;
     
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
+    final circleSize = isSmallScreen ? screenSize.width * 0.7 : 250.0;
+    
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('DrinKUp'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _resetDailyProgress,
-            tooltip: 'Reset daily progress',
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Progress circle
-            SizedBox(
-              width: 250,
-              height: 250,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Background circle
-                  CircularProgressIndicator(
-                    value: 1.0,
-                    strokeWidth: 10,
-                    backgroundColor: Colors.grey[800],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 20),
+                // Progress circle
+                SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Background circle
+                      CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 10,
+                        backgroundColor: Colors.grey[800],
+                      ),
+                      // Progress circle
+                      CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 10,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                      ),
+                      // Center text
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${(_currentWaterIntake * 1000).toInt()}ml',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 24 : 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white
+                              ),
+                            ),
+                            Text(
+                              'of ${(_dailyGoal * 1000).toInt()}ml',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 12 : 16,
+                                color: Colors.grey
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  // Progress circle
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                  ),
-                  // Center text
-                  Center(
-                    child: Column(
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Add water buttons - Wrap in SingleChildScrollView if needed
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          '${(_currentWaterIntake * 1000).toInt()}ml',
-                          style: const TextStyle(
-                            fontSize: 32, 
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white
-                          ),
-                        ),
-                        Text(
-                          'of ${(_dailyGoal * 1000).toInt()}ml',
-                          style: const TextStyle(
-                            fontSize: 16, 
-                            color: Colors.grey
-                          ),
-                        ),
+                        _buildWaterButton(0.25, '250ml', isSmallScreen),
+                        const SizedBox(width: 8),
+                        _buildWaterButton(0.5, '500ml', isSmallScreen),
+                        const SizedBox(width: 8),
+                        _buildWaterButton(1.0, '1L', isSmallScreen),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 40),
-            
-            // Add water buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildWaterButton(0.25, '250ml'),
-                _buildWaterButton(0.5, '500ml'),
-                _buildWaterButton(1.0, '1L'),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
-          ],
+          ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _resetDailyProgress,
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.refresh, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildWaterButton(double amount, String label) {
-    return Column(
-      children: [
-        ElevatedButton(
-          onPressed: () => _addWater(amount),
-          style: ElevatedButton.styleFrom(
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(20),
-            backgroundColor: Colors.blue,
+  Widget _buildWaterButton(double amount, String label, [bool isSmall = false]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: () => _addWater(amount),
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: isSmall ? const EdgeInsets.all(16) : const EdgeInsets.all(20),
+              backgroundColor: Colors.blue,
+            ),
+            child: Text(
+              '+$label',
+              style: TextStyle(
+                fontSize: isSmall ? 12 : 16,
+                color: Colors.white,
+              ),
+            ),
           ),
-          child: Text(
-            '+$label',
-            style: const TextStyle(fontSize: 16, color: Colors.white),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isSmall ? 10 : 12,
+              color: Colors.white70,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
