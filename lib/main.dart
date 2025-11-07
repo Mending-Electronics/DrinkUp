@@ -200,11 +200,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: StackFit.expand,
                           children: [
                             // Background circle
-                            CircularProgressIndicator(
-                              value: 1.0,
-                              strokeWidth: 10,
-                              backgroundColor: Colors.grey[800],
-                            ),
+                            // CircularProgressIndicator(
+                            //   value: 1.0,
+                            //   strokeWidth: 10,
+                            //   // backgroundColor: Colors.grey[800],
+                            // ),
                             // Progress circle with rotation gesture
                             GestureDetector(
                               onVerticalDragUpdate: (details) {
