@@ -18,13 +18,7 @@ class DrinKUpApp extends StatelessWidget {
     return MaterialApp(
       title: 'DrinKUp',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: drinkUpTheme,
       home: const HomeScreen().withRotaryScaffold(),
     );
   }
@@ -61,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _goalIncreaseTimer;
   DateTime? _lastIncreaseTime;
   final FocusNode _focusNode = FocusNode();
-  final double _volumeStep = 1.0; // 1cl per scroll step
+  final double _volumeStep = 10.0; // 1cl per scroll step
 
   @override
   void initState() {
@@ -77,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       final now = DateTime.now();
       setState(() {
-        _dailyGoal = (_dailyGoal + 1.0).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
+        _dailyGoal = (_dailyGoal + 1.0).clamp(double.negativeInfinity, 400.0); // Allow negative values, keep max at 100.0
         _lastIncreaseTime = now;
         _prefs.setDouble('daily_goal', _dailyGoal);
       });
@@ -105,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateWaterIntake(double newValue) {
     if (newValue < 0) newValue = 0;
-    if (newValue > 100) newValue = 100; // 100cl (1L) max
+    if (newValue > 400) newValue = 400; // 400cl (4L) max
     
     setState(() {
       _currentWaterIntake = double.parse(newValue.toStringAsFixed(1));
@@ -125,20 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Widget _buildWaterButton(double amount, String label) {
-    return ElevatedButton(
-      onPressed: () => _updateWaterIntake(_currentWaterIntake + amount),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue[800],
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(12),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 10),
-      ),
-    );
-  }
 
   void _addWater(double amount) {
     _updateWaterIntake(_currentWaterIntake + amount);
@@ -274,16 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Water amount buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildWaterButton(5, '5cl'),
-                          _buildWaterButton(10, '10cl'),
-                          _buildWaterButton(25, '25cl'),
-                        ],
                       ),
                     ],
                   ),
