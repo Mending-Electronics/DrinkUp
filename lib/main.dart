@@ -167,14 +167,14 @@ class _HomeScreenState extends State<HomeScreen> {
         Positioned.fill(
           child: Lottie.asset(
             'assets/water_animation.json',
-            fit: BoxFit.cover,
-            // width: MediaQuery.of(context).size.shortestSide * 2, // 90% of the shortest side
-            // height: MediaQuery.of(context).size.shortestSide * 2,
+            fit: BoxFit.cover,  // This will cover the available space while maintaining aspect ratio
+            width: double.infinity,  // Take full available width
+            height: double.infinity, // Take full available height
             repeat: true,
             animate: true,
             errorBuilder: (context, error, stackTrace) {
               debugPrint('Error loading Lottie animation: $error');
-              return Container(color: Colors.black);
+              return Container(color: AppColors.dark);  // Using your theme color
             },
           ),
         ),
