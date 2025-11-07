@@ -54,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double _currentWaterIntake = 0.0;
   double _dailyGoal = 1.0;
   late SharedPreferences _prefs;
+  bool _isAmbient = false;
+  late Timer _goalIncreaseTimer;
   final FocusNode _focusNode = FocusNode();
   final double _volumeStep = 0.1; // 100ml per scroll step
 
@@ -63,10 +65,19 @@ class _HomeScreenState extends State<HomeScreen> {
     _initPrefs();
     _focusNode.requestFocus();
     RawKeyboard.instance.addListener(_handleKeyEvent);
+    
+    // Start timer to increase daily goal every 30 seconds
+    _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      setState(() {
+        _dailyGoal += 0.1; // Increase by 100ml (0.1L)
+        _prefs.setDouble('daily_goal', _dailyGoal);
+      });
+    });
   }
 
   @override
   void dispose() {
+    _goalIncreaseTimer.cancel(); // Cancel the timer when the widget is disposed
     RawKeyboard.instance.removeListener(_handleKeyEvent);
     _focusNode.dispose();
     super.dispose();
@@ -181,18 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                           ),
                         ),
-                        // Add "check" icon button validate user declaration
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: IconButton(
-                            onPressed: _resetDailyProgress,
-                            icon: const Icon(Icons.check, color: Colors.white),
-                            color: Colors.white,
-                            iconSize: 15,
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
                         
                         // Center text
                         Center(
@@ -207,7 +206,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              // Add "check" icon button validate user declaration
+                            IconButton(
+                                  onPressed: _resetDailyProgress,
+                                  icon: const Icon(Icons.check, color: Colors.white),
+                                  color: Colors.white,
+                                  iconSize: 20,
+                                ),
+                              const SizedBox(height: 5),
                               Text(
                                 'of ${(_dailyGoal * 1000).toInt()}ml',
                                 style: TextStyle(
@@ -221,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 0),
                 ],
               ),
             ),
