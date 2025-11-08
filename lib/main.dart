@@ -156,8 +156,9 @@ class _HomeScreenState extends State<HomeScreen> {
   
   void _scrollToCurrentVolume({bool animate = true}) {
     if (_scrollController.hasClients) {
-      final itemWidth = 100.0; // Largeur estimée d'un élément
-      final targetOffset = _currentVolumeIndex * itemWidth - (MediaQuery.of(context).size.width - itemWidth) / 2;
+      final itemHeight = 10.0; // Hauteur d'un élément
+      final viewportHeight = 10.0; // Hauteur visible du ListView
+      final targetOffset = _currentVolumeIndex * itemHeight - (viewportHeight - itemHeight) / 2;
       
       if (animate) {
         _scrollController.animateTo(
@@ -175,8 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_isScrolling) {
       _isScrolling = true;
       final scrollPosition = _scrollController.position.pixels;
-      final itemWidth = 100.0; // Même largeur que pour le défilement
-      final newIndex = (scrollPosition / itemWidth).round();
+      final itemHeight = 25.0; // Hauteur d'un élément
+      final newIndex = (scrollPosition / itemHeight).round();
       
       // Gestion du défilement infini
       int actualIndex = newIndex % _volumeSteps.length;
@@ -389,10 +390,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   // const SizedBox(height: 10),
                                   SizedBox(
-                                    height: 25,
+                                    height: 30, // Hauteur du conteneur du carrousel
                                     child: ListView.builder(
                                       controller: _scrollController,
-                                      scrollDirection: Axis.horizontal,
+                                      scrollDirection: Axis.vertical,
                                       itemCount: _volumeSteps.length * 3, // Pour l'effet de défilement infini
                                       itemBuilder: (context, index) {
                                         final actualIndex = index % _volumeSteps.length;
@@ -402,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         return GestureDetector(
                                           onTap: () => _updateWaterIntake(volume),
                                           child: Container(
-                                            width: 100,
+                                            height: 25, // Hauteur de chaque élément
                                             alignment: Alignment.center,
                                             child: Text(
                                               '${volume.toInt()}cl',
