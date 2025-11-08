@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final FocusNode _focusNode = FocusNode();
   final List<double> _volumeSteps = [5.0, 15.0, 25.0, 33.0, 50.0, 75.0, 100.0, 125.0, 150.0, 200.0]; // Valeurs de volume prédéfinies
   int _currentVolumeIndex = 0; // Index de la valeur de volume actuelle
+  final ScrollController _scrollController = ScrollController();
+  bool _isScrolling = false;
   final double _minuteIncrement = 0.14; // 0.14cl par minute
   final double _maxDailyGoal = 200.0; // 200cl = 2L
 
@@ -71,6 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _startGoalIncreaseTimer();
     _startDailyResetTimer();
     RawKeyboard.instance.addListener(_handleKeyEvent);
+    
+    // Initialiser le contrôleur de défilement
+    _scrollController.addListener(_onScroll);
+    
+    // Positionner le défilement sur la valeur actuelle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentVolume(animate: false);
+    });
     
     // Debug: Vérifier la valeur de _maxDailyGoal
     print('Valeur de _maxDailyGoal: $_maxDailyGoal');
@@ -100,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _goalIncreaseTimer.cancel();
     _dailyResetTimer.cancel();
     RawKeyboard.instance.removeListener(_handleKeyEvent);
+    _scrollController.dispose();
     super.dispose();
     
     // Debug: Vérifier la valeur de _dailyConsumption à la fermeture
@@ -125,18 +136,62 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateWaterIntake(double newValue) {
     // Trouve l'index de la valeur la plus proche dans la liste des volumes prédéfinis
-    _currentVolumeIndex = _volumeSteps.indexWhere((v) => v == newValue);
-    if (_currentVolumeIndex == -1) {
+    int newIndex = _volumeSteps.indexWhere((v) => v == newValue);
+    if (newIndex == -1) {
       // Si la valeur n'est pas trouvée, on prend la plus proche
-      _currentVolumeIndex = _volumeSteps.indexWhere((v) => v > newValue) - 1;
-      if (_currentVolumeIndex < 0) _currentVolumeIndex = 0;
-      if (_currentVolumeIndex >= _volumeSteps.length) _currentVolumeIndex = _volumeSteps.length - 1;
+      newIndex = _volumeSteps.indexWhere((v) => v > newValue) - 1;
+      if (newIndex < 0) newIndex = 0;
+      if (newIndex >= _volumeSteps.length) newIndex = _volumeSteps.length - 1;
     }
     
-    setState(() {
-      _currentWaterIntake = _volumeSteps[_currentVolumeIndex];
-    });
-    _saveWaterIntake();
+    if (newIndex != _currentVolumeIndex) {
+      _currentVolumeIndex = newIndex;
+      setState(() {
+        _currentWaterIntake = _volumeSteps[_currentVolumeIndex];
+      });
+      _saveWaterIntake();
+      _scrollToCurrentVolume();
+    }
+  }
+  
+  void _scrollToCurrentVolume({bool animate = true}) {
+    if (_scrollController.hasClients) {
+      final itemWidth = 100.0; // Largeur estimée d'un élément
+      final targetOffset = _currentVolumeIndex * itemWidth - (MediaQuery.of(context).size.width - itemWidth) / 2;
+      
+      if (animate) {
+        _scrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(targetOffset);
+      }
+    }
+  }
+  
+  void _onScroll() {
+    if (!_isScrolling) {
+      _isScrolling = true;
+      final scrollPosition = _scrollController.position.pixels;
+      final itemWidth = 100.0; // Même largeur que pour le défilement
+      final newIndex = (scrollPosition / itemWidth).round();
+      
+      // Gestion du défilement infini
+      int actualIndex = newIndex % _volumeSteps.length;
+      if (actualIndex < 0) actualIndex += _volumeSteps.length;
+      
+      if (actualIndex != _currentVolumeIndex) {
+        _currentVolumeIndex = actualIndex;
+        setState(() {
+          _currentWaterIntake = _volumeSteps[_currentVolumeIndex];
+        });
+        _saveWaterIntake();
+      }
+      
+      _isScrolling = false;
+    }
   }
 
   Future<void> _saveWaterIntake() async {
@@ -332,16 +387,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: AppColors.white,
                                     iconSize: 20,
                                   ),
-                                  // const SizedBox(height: 5),
-                                  Text(
-                                    '${currentCl.toInt()}cl',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.white,
-                                    ),  
+                                  // const SizedBox(height: 10),
+                                  SizedBox(
+                                    height: 25,
+                                    child: ListView.builder(
+                                      controller: _scrollController,
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: _volumeSteps.length * 3, // Pour l'effet de défilement infini
+                                      itemBuilder: (context, index) {
+                                        final actualIndex = index % _volumeSteps.length;
+                                        final volume = _volumeSteps[actualIndex];
+                                        final isSelected = volume == currentCl;
+                                        
+                                        return GestureDetector(
+                                          onTap: () => _updateWaterIntake(volume),
+                                          child: Container(
+                                            width: 100,
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '${volume.toInt()}cl',
+                                              style: TextStyle(
+                                                fontSize: isSelected ? 18 : 14,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                color: isSelected ? AppColors.blue2 : AppColors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                  const SizedBox(height: 5),
+                                  // const SizedBox(height: 5),
+                                 
                                   // Barre de progression avec une StatefulBuilder pour un contrôle précis
                                   StatefulBuilder(
                                     key: _progressKey,
