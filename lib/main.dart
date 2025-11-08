@@ -51,11 +51,13 @@ extension RotaryScaffold on Widget {
 class _HomeScreenState extends State<HomeScreen> {
   double _currentWaterIntake = 0.0;
   double _dailyGoal = 0.0;
+  double _dailyConsumption = 0.0; // Somme des valeurs soumises depuis minuit
   late SharedPreferences _prefs;
   late Timer _goalIncreaseTimer;
-  DateTime? _lastIncreaseTime;
+  late Timer _dailyResetTimer;
+  DateTime _lastResetDate = DateTime.now();
   final FocusNode _focusNode = FocusNode();
-  final double _volumeStep = 5.0; // 5cl per scroll step
+  final double _volumeStep = 5.0; // 5cl par incrément
   final double _minuteIncrement = 0.14; // 0.14cl par minute
   final double _maxDailyGoal = 200.0; // 200cl = 2L
 
@@ -67,20 +69,23 @@ class _HomeScreenState extends State<HomeScreen> {
     RawKeyboard.instance.addListener(_handleKeyEvent);
     
     _startGoalIncreaseTimer();
+    _startDailyResetTimer();
   }
 
   double _calculateGoalFromTime() {
     final now = DateTime.now();
     final midnight = DateTime(now.year, now.month, now.day);
     final minutesSinceMidnight = now.difference(midnight).inMinutes;
-    return (minutesSinceMidnight * _minuteIncrement).clamp(0.0, _maxDailyGoal);
+    final timeBasedGoal = minutesSinceMidnight * _minuteIncrement;
+    
+    // On retourne la dette hydrique (peut être négative si l'utilisateur a bu plus que nécessaire)
+    return timeBasedGoal - _dailyConsumption;
   }
 
   void _startGoalIncreaseTimer() {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       setState(() {
         _dailyGoal = _calculateGoalFromTime();
-        _lastIncreaseTime = DateTime.now();
         _saveWaterIntake();
       });
     });
@@ -88,7 +93,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _goalIncreaseTimer.cancel(); // Cancel the timer when the widget is disposed
+    _goalIncreaseTimer.cancel();
+    _dailyResetTimer.cancel();
     RawKeyboard.instance.removeListener(_handleKeyEvent);
     _focusNode.dispose();
     super.dispose();
@@ -116,19 +122,40 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _saveWaterIntake() async {
-    _prefs.setDouble('water_intake', _currentWaterIntake);
-    _prefs.setDouble('daily_goal', _dailyGoal);
-    if (_lastIncreaseTime != null) {
-      _prefs.setString('last_increase_time', _lastIncreaseTime!.toIso8601String());
-    }
+    await _prefs.setDouble('water_intake', _currentWaterIntake);
+    await _prefs.setDouble('daily_goal', _dailyGoal);
+    await _prefs.setDouble('daily_consumption', _dailyConsumption);
+    await _prefs.setString('last_reset_date', _lastResetDate.toIso8601String());
   }
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
+    
+    // Vérifier si c'est un nouveau jour
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastResetDateStr = _prefs.getString('last_reset_date');
+    
     setState(() {
       _currentWaterIntake = _prefs.getDouble('water_intake') ?? 0.0;
+      _dailyConsumption = _prefs.getDouble('daily_consumption') ?? 0.0;
+      
+      if (lastResetDateStr != null) {
+        _lastResetDate = DateTime.parse(lastResetDateStr);
+        final lastResetDay = DateTime(_lastResetDate.year, _lastResetDate.month, _lastResetDate.day);
+        
+        if (lastResetDay.isBefore(today)) {
+          // Nouveau jour, on réinitialise la consommation
+          _dailyConsumption = 0.0;
+          _currentWaterIntake = 0.0;
+          _lastResetDate = now;
+        }
+      } else {
+        // Première utilisation
+        _lastResetDate = now;
+      }
+      
       _dailyGoal = _calculateGoalFromTime();
-      _lastIncreaseTime = DateTime.now();
       _saveWaterIntake();
     });
   }
@@ -137,41 +164,46 @@ class _HomeScreenState extends State<HomeScreen> {
     _updateWaterIntake(_currentWaterIntake + amount);
   }
 
-  void _resetDailyProgress() {
-    // Cancel the current timer to prevent race conditions
-    _goalIncreaseTimer.cancel();
+  void _startDailyResetTimer() {
+    // Planifie la vérification quotidienne à minuit
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final durationUntilMidnight = midnight.difference(now);
     
-    setState(() {
-      // Calculate the time passed since last increase
-      final now = DateTime.now();
-      final lastIncreaseTime = _lastIncreaseTime ?? now;
-      final timePassed = now.difference(lastIncreaseTime);
+    _dailyResetTimer = Timer(durationUntilMidnight, () {
+      // À minuit, on réinitialise la consommation
+      setState(() {
+        _dailyConsumption = 0.0;
+        _lastResetDate = DateTime.now();
+        _saveWaterIntake();
+      });
       
-      // Calculate how many 30-second intervals have passed
-      final intervalsPassed = timePassed.inSeconds ~/ 30;
-      
-      // Calculate the total automatic increase that should have happened (1cl per interval)
-      final autoIncrease = intervalsPassed * 10.0; // 1cl per interval
-      
-      // Adjust the daily goal: subtract the submitted amount and add any automatic increases
-      _dailyGoal = (_dailyGoal - _currentWaterIntake + autoIncrease).clamp(double.negativeInfinity, 100.0); // Allow negative values, keep max at 100.0
-      
-      _currentWaterIntake = 0.0;
-      _lastIncreaseTime = now; // Reset the last increase time
-      
-      _prefs.setDouble('water_intake', _currentWaterIntake);
-      _prefs.setDouble('daily_goal', _dailyGoal);
+      // On reprogramme pour le prochain jour
+      _startDailyResetTimer();
     });
-    
-    // Restart the timer
-    _startGoalIncreaseTimer();
+  }
+
+  void _resetDailyProgress() {
+    setState(() {
+      // On ajoute la valeur actuelle à la consommation quotidienne
+      _dailyConsumption += _currentWaterIntake;
+      // On réinitialise la valeur actuelle
+      _currentWaterIntake = 0.0;
+      // On met à jour le goal
+      _dailyGoal = _calculateGoalFromTime();
+      // On sauvegarde
+      _saveWaterIntake();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final progress = _dailyGoal > 0 ? (_currentWaterIntake / _dailyGoal).clamp(0.0, 1.0) : 0.0;
-    // Convert to cl for display (1cl = 10ml, but we'll store in cl directly)
+    // La progression est basée sur la consommation quotidienne par rapport à l'objectif max
+    // final progress = (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0);
+    // Convert to cl for display
     final currentCl = _currentWaterIntake;
+    // Le goal est la dette hydrique (peut être négatif)
     final goalCl = _dailyGoal;
 
     return Stack(
@@ -267,12 +299,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const SizedBox(height: 5),
                                   SizedBox(
-                                    width: 120,
+                                    width: 100,
                                     height: 8,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(4),
                                       child: LinearProgressIndicator(
-                                        value: (goalCl - currentCl).clamp(0.0, _maxDailyGoal) / _maxDailyGoal,
+                                        value: _dailyConsumption / _maxDailyGoal,
                                         backgroundColor: Colors.white24,
                                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.blue2),
                                         minHeight: 8,
