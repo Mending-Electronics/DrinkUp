@@ -50,12 +50,14 @@ extension RotaryScaffold on Widget {
 
 class _HomeScreenState extends State<HomeScreen> {
   double _currentWaterIntake = 0.0;
-  double _dailyGoal = 1.0;
+  double _dailyGoal = 0.0;
   late SharedPreferences _prefs;
   late Timer _goalIncreaseTimer;
   DateTime? _lastIncreaseTime;
   final FocusNode _focusNode = FocusNode();
   final double _volumeStep = 5.0; // 5cl per scroll step
+  final double _minuteIncrement = 0.14; // 0.14cl par minute
+  final double _maxDailyGoal = 200.0; // 200cl = 2L
 
   @override
   void initState() {
@@ -67,13 +69,19 @@ class _HomeScreenState extends State<HomeScreen> {
     _startGoalIncreaseTimer();
   }
 
+  double _calculateGoalFromTime() {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day);
+    final minutesSinceMidnight = now.difference(midnight).inMinutes;
+    return (minutesSinceMidnight * _minuteIncrement).clamp(0.0, _maxDailyGoal);
+  }
+
   void _startGoalIncreaseTimer() {
     _goalIncreaseTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      final now = DateTime.now();
       setState(() {
-        _dailyGoal = (_dailyGoal + 1.0).clamp(double.negativeInfinity, 400.0); // Allow negative values, keep max at 100.0
-        _lastIncreaseTime = now;
-        _prefs.setDouble('daily_goal', _dailyGoal);
+        _dailyGoal = _calculateGoalFromTime();
+        _lastIncreaseTime = DateTime.now();
+        _saveWaterIntake();
       });
     });
   }
@@ -108,17 +116,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _saveWaterIntake() async {
-    await _prefs.setDouble('water_intake', _currentWaterIntake);
+    _prefs.setDouble('water_intake', _currentWaterIntake);
+    _prefs.setDouble('daily_goal', _dailyGoal);
+    if (_lastIncreaseTime != null) {
+      _prefs.setString('last_increase_time', _lastIncreaseTime!.toIso8601String());
+    }
   }
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     setState(() {
       _currentWaterIntake = _prefs.getDouble('water_intake') ?? 0.0;
-      _dailyGoal = _prefs.getDouble('daily_goal') ?? 1.0;
+      _dailyGoal = _calculateGoalFromTime();
+      _lastIncreaseTime = DateTime.now();
+      _saveWaterIntake();
     });
   }
-
 
   void _addWater(double amount) {
     _updateWaterIntake(_currentWaterIntake + amount);
@@ -227,9 +240,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     '${goalCl.toInt()}cl',
                                     style: TextStyle(
                                       fontSize: 28,
-                                      color: goalCl.toInt() > 30 
+                                      color: goalCl.toInt() > 100 
                                           ? AppColors.danger 
-                                          : goalCl.toInt() > 20 
+                                          : goalCl.toInt() > 50 
                                               ? AppColors.warning 
                                               : goalCl.toInt() < 1 
                                                   ? AppColors.success 
@@ -252,6 +265,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                       color: AppColors.white,
                                     ),  
                                   ),
+                                  const SizedBox(height: 5),
+                                  SizedBox(
+                                    width: 120,
+                                    height: 8,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: (goalCl - currentCl).clamp(0.0, _maxDailyGoal) / _maxDailyGoal,
+                                        backgroundColor: Colors.white24,
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.blue2),
+                                        minHeight: 8,
+                                      ),
+                                    ),
+                                  ),
+                                  //
                                 ],
                               ),
                             ),
