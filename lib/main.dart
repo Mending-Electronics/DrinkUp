@@ -198,9 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress = _dailyGoal > 0 ? (_currentWaterIntake / _dailyGoal).clamp(0.0, 1.0) : 0.0;
     // La progression est basée sur la consommation quotidienne par rapport à l'objectif max
-    // final progress = (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0);
     // Convert to cl for display
     final currentCl = _currentWaterIntake;
     // Le goal est la dette hydrique (peut être négatif)
@@ -257,7 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _saveWaterIntake();
                               },
                               child: CircularProgressIndicator(
-                                value: progress,
+                                value: goalCl != 0 
+                                    ? (_currentWaterIntake / goalCl).clamp(0.0, 1.0)
+                                    : 0.0,
                                 strokeWidth: 8,
                                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue2),
                               ),
@@ -304,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(4),
                                       child: LinearProgressIndicator(
-                                        value: _dailyConsumption / _maxDailyGoal,
+                                        value: (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0),
                                         backgroundColor: Colors.white24,
                                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.blue2),
                                         minHeight: 8,
