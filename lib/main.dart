@@ -53,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double _dailyGoal = 0.0;
   double _dailyConsumption = 0.0; // Somme des valeurs soumises depuis minuit
   late SharedPreferences _prefs;
+  // Clé pour forcer la reconstruction de la barre de progression
+  final GlobalKey _progressKey = GlobalKey();
   late Timer _goalIncreaseTimer;
   late Timer _dailyResetTimer;
   DateTime _lastResetDate = DateTime.now();
@@ -125,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _saveWaterIntake() async {
+    print('Sauvegarde - Consommation: $_dailyConsumption cl, Objectif: $_dailyGoal');
     await _prefs.setDouble('water_intake', _currentWaterIntake);
     await _prefs.setDouble('daily_goal', _dailyGoal);
     await _prefs.setDouble('daily_consumption', _dailyConsumption);
@@ -143,22 +146,27 @@ class _HomeScreenState extends State<HomeScreen> {
       _currentWaterIntake = _prefs.getDouble('water_intake') ?? 0.0;
       _dailyConsumption = _prefs.getDouble('daily_consumption') ?? 0.0;
       
+      print('Initialisation - Consommation chargée: $_dailyConsumption cl');
+      
       if (lastResetDateStr != null) {
         _lastResetDate = DateTime.parse(lastResetDateStr);
         final lastResetDay = DateTime(_lastResetDate.year, _lastResetDate.month, _lastResetDate.day);
         
         if (lastResetDay.isBefore(today)) {
           // Nouveau jour, on réinitialise la consommation
+          print('Nouveau jour - Réinitialisation de la consommation');
           _dailyConsumption = 0.0;
           _currentWaterIntake = 0.0;
           _lastResetDate = now;
         }
       } else {
         // Première utilisation
+        print('Première utilisation - Initialisation des préférences');
         _lastResetDate = now;
       }
       
       _dailyGoal = _calculateGoalFromTime();
+      print('Objectif quotidien initial: ${_dailyGoal.toStringAsFixed(2)} cl');
       _saveWaterIntake();
     });
   }
@@ -188,19 +196,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _resetDailyProgress() {
     if (_currentWaterIntake > 0) {  // Ne faire la mise à jour que si on a une valeur à ajouter
+      // On ajoute la valeur actuelle à la consommation quotidienne
+      final newConsumption = _dailyConsumption + _currentWaterIntake;
+      
+      // On met à jour l'état en une seule opération
       setState(() {
-        // On ajoute la valeur actuelle à la consommation quotidienne
-        _dailyConsumption += _currentWaterIntake;
-        // On réinitialise la valeur actuelle
+        _dailyConsumption = newConsumption;
         _currentWaterIntake = 0.0;
-        // On met à jour le goal
         _dailyGoal = _calculateGoalFromTime();
-        // On sauvegarde
-        _saveWaterIntake();
-        
-        // Debug log
-        print('Nouvelle consommation quotidienne: $_dailyConsumption cl');
+        // On force la recréation de la clé pour la barre de progression
+        _progressKey.currentState?.setState(() {});
       });
+      
+      // On sauvegarde après la mise à jour de l'état
+      _saveWaterIntake().then((_) {
+        if (mounted) {
+          setState(() {
+            // On force une nouvelle mise à jour de l'état
+            _progressKey.currentState?.setState(() {});
+          });
+        }
+      });
+      
+      print('Nouvelle consommation quotidienne: $newConsumption cl');
     }
   }
 
@@ -211,6 +229,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentCl = _currentWaterIntake;
     // Le goal est la dette hydrique (peut être négatif)
     final goalCl = _dailyGoal;
+    
+    // Debug: Afficher les valeurs actuelles
+    final progressValue = (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0);
+    print('Build - Progression: $progressValue ($_dailyConsumption / $_maxDailyGoal)');
 
     return Stack(
       children: [
@@ -306,18 +328,42 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),  
                                   ),
                                   const SizedBox(height: 5),
-                                  SizedBox(
-                                    width: 100,
-                                    height: 8,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: LinearProgressIndicator(
-                                        value: (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0),
-                                        backgroundColor: Colors.white24,
-                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.blue2),
-                                        minHeight: 8,
-                                      ),
-                                    ),
+                                  // Barre de progression avec une StatefulBuilder pour un contrôle précis
+                                  StatefulBuilder(
+                                    key: _progressKey,
+                                    builder: (context, setState) {
+                                      final progress = (_dailyConsumption / _maxDailyGoal).clamp(0.0, 1.0);
+                                      print('Mise à jour UI - Progression: $progress ($_dailyConsumption / $_maxDailyGoal)');
+                                      return Container(
+                                        width: 100,
+                                        height: 12,  // Hauteur légèrement augmentée
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(6),
+                                          color: Colors.white24,  // Fond de la barre
+                                          border: Border.all(color: Colors.white30, width: 0.5),  // Bordure pour mieux voir les limites
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Stack(
+                                            children: [
+                                              // Fond de la barre
+                                              Container(color: Colors.white24),
+                                              // Partie remplie
+                                              FractionallySizedBox(
+                                                widthFactor: progress,
+                                                heightFactor: 1.0,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.success,
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                   //
                                 ],
