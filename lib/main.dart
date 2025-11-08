@@ -65,11 +65,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initPrefs();
-    _focusNode.requestFocus();
-    RawKeyboard.instance.addListener(_handleKeyEvent);
-    
     _startGoalIncreaseTimer();
     _startDailyResetTimer();
+    RawKeyboard.instance.addListener(_handleKeyEvent);
+    
+    // Debug: Vérifier la valeur de _maxDailyGoal
+    print('Valeur de _maxDailyGoal: $_maxDailyGoal');
   }
 
   double _calculateGoalFromTime() {
@@ -96,8 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _goalIncreaseTimer.cancel();
     _dailyResetTimer.cancel();
     RawKeyboard.instance.removeListener(_handleKeyEvent);
-    _focusNode.dispose();
     super.dispose();
+    
+    // Debug: Vérifier la valeur de _dailyConsumption à la fermeture
+    print('Fermeture - Consommation quotidienne: $_dailyConsumption cl');
   }
 
   void _handleKeyEvent(RawKeyEvent event) {
@@ -184,16 +187,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _resetDailyProgress() {
-    setState(() {
-      // On ajoute la valeur actuelle à la consommation quotidienne
-      _dailyConsumption += _currentWaterIntake;
-      // On réinitialise la valeur actuelle
-      _currentWaterIntake = 0.0;
-      // On met à jour le goal
-      _dailyGoal = _calculateGoalFromTime();
-      // On sauvegarde
-      _saveWaterIntake();
-    });
+    if (_currentWaterIntake > 0) {  // Ne faire la mise à jour que si on a une valeur à ajouter
+      setState(() {
+        // On ajoute la valeur actuelle à la consommation quotidienne
+        _dailyConsumption += _currentWaterIntake;
+        // On réinitialise la valeur actuelle
+        _currentWaterIntake = 0.0;
+        // On met à jour le goal
+        _dailyGoal = _calculateGoalFromTime();
+        // On sauvegarde
+        _saveWaterIntake();
+        
+        // Debug log
+        print('Nouvelle consommation quotidienne: $_dailyConsumption cl');
+      });
+    }
   }
 
   @override
