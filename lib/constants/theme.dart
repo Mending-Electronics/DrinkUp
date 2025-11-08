@@ -6,6 +6,7 @@ class AppColors {
   static const Color blue3 = Color.fromARGB(255, 145, 207, 234); // RGBA: 145, 207, 234, 255
   static const Color white = Color.fromARGB(255, 255, 255, 255); // RGBA: 255, 255, 255, 255
   static const Color dark = Color.fromARGB(255, 17, 20, 24);  // RGBA: 17, 20, 24, 255
+  static const Color green = Color.fromARGB(255, 117, 236, 101);  // RGBA: 17, 20, 24, 255
   static const Color success = Color.fromARGB(255, 145, 234, 145); // RGBA: 145, 207, 234, 255
   static const Color danger = Color.fromARGB(255, 233, 124, 124); // RGBA: 255, 0, 0, 255
   static const Color warning = Color.fromARGB(255, 230, 189, 113); // RGBA: 255, 165, 0, 255

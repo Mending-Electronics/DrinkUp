@@ -59,7 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _dailyResetTimer;
   DateTime _lastResetDate = DateTime.now();
   final FocusNode _focusNode = FocusNode();
-  final double _volumeStep = 5.0; // 5cl par incrément
+  final List<double> _volumeSteps = [5.0, 15.0, 25.0, 33.0, 50.0, 75.0, 100.0, 125.0, 150.0, 200.0]; // Valeurs de volume prédéfinies
+  int _currentVolumeIndex = 0; // Index de la valeur de volume actuelle
   final double _minuteIncrement = 0.14; // 0.14cl par minute
   final double _maxDailyGoal = 200.0; // 200cl = 2L
 
@@ -109,19 +110,31 @@ class _HomeScreenState extends State<HomeScreen> {
     if (event is RawKeyDownEvent) {
       final key = event.logicalKey;
       if (key == LogicalKeyboardKey.arrowUp) {
-        _updateWaterIntake(_currentWaterIntake + _volumeStep);
+        // Passe à la valeur supérieure dans la liste
+        _currentVolumeIndex = (_currentVolumeIndex + 1) % _volumeSteps.length;
+        _updateWaterIntake(_volumeSteps[_currentVolumeIndex]);
       } else if (key == LogicalKeyboardKey.arrowDown) {
-        _updateWaterIntake(_currentWaterIntake - _volumeStep);
+        // Passe à la valeur inférieure dans la liste
+        _currentVolumeIndex = (_currentVolumeIndex - 1) >= 0 
+            ? _currentVolumeIndex - 1 
+            : _volumeSteps.length - 1;
+        _updateWaterIntake(_volumeSteps[_currentVolumeIndex]);
       }
     }
   }
 
   void _updateWaterIntake(double newValue) {
-    if (newValue < 0) newValue = 0;
-    if (newValue > 250) newValue = 250; // 250cl (2.5L) max
+    // Trouve l'index de la valeur la plus proche dans la liste des volumes prédéfinis
+    _currentVolumeIndex = _volumeSteps.indexWhere((v) => v == newValue);
+    if (_currentVolumeIndex == -1) {
+      // Si la valeur n'est pas trouvée, on prend la plus proche
+      _currentVolumeIndex = _volumeSteps.indexWhere((v) => v > newValue) - 1;
+      if (_currentVolumeIndex < 0) _currentVolumeIndex = 0;
+      if (_currentVolumeIndex >= _volumeSteps.length) _currentVolumeIndex = _volumeSteps.length - 1;
+    }
     
     setState(() {
-      _currentWaterIntake = double.parse(newValue.toStringAsFixed(1));
+      _currentWaterIntake = _volumeSteps[_currentVolumeIndex];
     });
     _saveWaterIntake();
   }
@@ -277,7 +290,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             GestureDetector(
                               onVerticalDragUpdate: (details) {
                                 // Convert vertical drag to volume change (1px = 0.1L or 10cl)
-                                final step = details.delta.dy > 0 ? -_volumeStep : _volumeStep;
+                                // Utilise le premier pas de la liste des volumes prédéfinis comme incrément
+                                final step = details.delta.dy > 0 ? -_volumeSteps[0] : _volumeSteps[0];
                                 _updateWaterIntake(_currentWaterIntake + step);
                               },
                               onVerticalDragEnd: (_) {
@@ -354,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 heightFactor: 1.0,
                                                 child: Container(
                                                   decoration: BoxDecoration(
-                                                    color: AppColors.success,
+                                                    color: AppColors.green,
                                                     borderRadius: BorderRadius.circular(6),
                                                   ),
                                                 ),
