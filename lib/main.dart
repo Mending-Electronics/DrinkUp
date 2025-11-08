@@ -407,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             child: Text(
                                               '${volume.toInt()}cl',
                                               style: TextStyle(
-                                                fontSize: isSelected ? 18 : 14,
+                                                fontSize: isSelected ? 14 : 12,
                                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                                 color: isSelected ? AppColors.blue2 : AppColors.white,
                                               ),
