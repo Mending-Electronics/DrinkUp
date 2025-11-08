@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateWaterIntake(double newValue) {
     if (newValue < 0) newValue = 0;
-    if (newValue > 400) newValue = 400; // 400cl (4L) max
+    if (newValue > 250) newValue = 250; // 250cl (2.5L) max
     
     setState(() {
       _currentWaterIntake = double.parse(newValue.toStringAsFixed(1));
