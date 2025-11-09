@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _dailyResetTimer;
   DateTime _lastResetDate = DateTime.now();
   final FocusNode _focusNode = FocusNode();
-  final List<double> _volumeSteps = [5.0, 15.0, 25.0, 33.0, 50.0, 75.0, 100.0, 125.0, 150.0, 200.0]; // Valeurs de volume prédéfinies
+  final List<double> _volumeSteps = [0.0, 5.0, 15.0, 25.0, 33.0, 50.0, 75.0, 100.0, 125.0, 150.0, 200.0]; // Valeurs de volume prédéfinies
   int _currentVolumeIndex = 0; // Index de la valeur de volume actuelle
   final ScrollController _scrollController = ScrollController();
   bool _isScrolling = false;
@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_isScrolling) {
       _isScrolling = true;
       final scrollPosition = _scrollController.position.pixels;
-      final itemHeight = 25.0; // Hauteur d'un élément
+      final itemHeight = 20.0; // Hauteur d'un élément
       final newIndex = (scrollPosition / itemHeight).round();
       
       // Gestion du défilement infini
@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   // const SizedBox(height: 10),
                                   SizedBox(
-                                    height: 30, // Hauteur du conteneur du carrousel
+                                    height: 20, // Hauteur du conteneur du carrousel
                                     child: ListView.builder(
                                       controller: _scrollController,
                                       scrollDirection: Axis.vertical,
@@ -403,14 +403,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                         return GestureDetector(
                                           onTap: () => _updateWaterIntake(volume),
                                           child: Container(
-                                            height: 25, // Hauteur de chaque élément
+                                            height: 20, // Hauteur de chaque élément
                                             alignment: Alignment.center,
                                             child: Text(
                                               '${volume.toInt()}cl',
                                               style: TextStyle(
-                                                fontSize: isSelected ? 14 : 12,
+                                                fontSize: isSelected ? 18 : 9,
                                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                color: isSelected ? AppColors.blue2 : AppColors.white,
+                                                color: isSelected ? AppColors.blue2 : AppColors.blue1,
                                               ),
                                             ),
                                           ),
