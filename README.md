@@ -1,4 +1,4 @@
-# DrinKUp 💧
+# DrinkUp 💧
 
 A Flutter Wear OS app for Samsung Galaxy Watch 6 that helps users stay hydrated throughout the day.
 
@@ -16,13 +16,23 @@ A Flutter Wear OS app for Samsung Galaxy Watch 6 that helps users stay hydrated 
 Uses this animation:  
 [View Animation](https://lottie.host/embed/471612cd-a65c-4ef2-ac30-74ea0f66cd82/P9llGuJ6h1.lottie)
 
-## 🛠 Setup
 
-### 1. Configure Gradle
-```kotlin
-allprojects {
-    repositories {
-        mavenCentral()
-        maven(url = "https://jitpack.io")
-    }
-}
+### Screenshots
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0001.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0002.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0003.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0004.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0005.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0006.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0007.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/screenshot0008.png)
+
+![DrinkUp Interface](https://raw.githubusercontent.com/Mending-Electronics/DrinkUp/main/.screenshots/video.gif)
