@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Clé pour forcer la reconstruction de la barre de progression
   final GlobalKey _progressKey = GlobalKey();
   late Timer _goalIncreaseTimer;
-  late Timer _dailyResetTimer;
+  late Timer _dailyResetTimer = Timer(Duration.zero, () {}); // Initialisation vide
   DateTime _lastResetDate = DateTime.now();
   final FocusNode _focusNode = FocusNode();
   final List<double> _volumeSteps = [0.0, 5.0, 15.0, 25.0, 33.0, 50.0, 75.0, 100.0, 125.0, 150.0, 200.0]; // Valeurs de volume prédéfinies
@@ -245,15 +245,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startDailyResetTimer() {
+    // Annuler le timer existant s'il y en a un
+    _dailyResetTimer.cancel();
+    
     // Planifie la vérification quotidienne à minuit
     final now = DateTime.now();
     final midnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
     final durationUntilMidnight = midnight.difference(now);
     
+    print('Prochaine réinitialisation à minuit: $midnight');
+    
     _dailyResetTimer = Timer(durationUntilMidnight, () {
+      print('Réinitialisation quotidienne à minuit');
+      
       // À minuit, on réinitialise la consommation
       setState(() {
         _dailyConsumption = 0.0;
+        _currentWaterIntake = 0.0;
         _lastResetDate = DateTime.now();
         _saveWaterIntake();
       });
@@ -418,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       },
                                     ),
                                   ),
-                                  // const SizedBox(height: 5),
+                                  const SizedBox(height: 5),
                                  
                                   // Barre de progression avec une StatefulBuilder pour un contrôle précis
                                   StatefulBuilder(
