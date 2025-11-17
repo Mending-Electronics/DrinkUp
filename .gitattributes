@@ -1,2 +1,6 @@
-*.dart linguist-language=Dart
+# Désactiver la détection par défaut
 * linguist-detectable=false
+
+# Réactiver uniquement les fichiers Dart
+*.dart linguist-detectable=true
+*.dart linguist-language=Dart
