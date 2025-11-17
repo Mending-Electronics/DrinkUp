@@ -1,3 +1,2 @@
-# Compter uniquement les fichiers .dart dans les stats de langage
-*.dart linguist-detectable=true
+*.dart linguist-language=Dart
 * linguist-detectable=false
