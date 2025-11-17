@@ -4,3 +4,6 @@
 # Réactiver uniquement les fichiers Dart
 *.dart linguist-detectable=true
 *.dart linguist-language=Dart
+
+*.kts linguist-detectable=true
+*.kts linguist-language=Kotlin
